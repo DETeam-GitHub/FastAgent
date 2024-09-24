@@ -1,1 +1,1 @@
-from fast_agent import *
+from .fastagent import *
