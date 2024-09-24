@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 filepath = 'README.md'
 
 setup(
-    name='fast-agent',
+    name='fast_agent',
     version='0.1.0',
     author='DETeam',
     author_email='ldx@destudio.asia',
