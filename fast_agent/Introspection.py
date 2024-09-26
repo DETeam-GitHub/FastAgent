@@ -3,46 +3,58 @@
 """
 
 import inspect
-from typing import Any, Dict, Optional
 
-def get_function_info(func: callable) -> Dict[str, Any]:
-    """
-    获取给定函数的所有参数及其类型，并获取函数的返回值类型和函数名称。
-    
-    参数:
-    func (callable): 要检查的函数。
-    
-    返回:
-    dict: 包含函数名称、参数名称、类型和返回值类型的字典。
-    """
+def decorator(func,kwargs):
     # 获取函数签名
-    signature = inspect.signature(func)
+    sig = inspect.signature(func)
     
-    # 解析参数和类型注解
-    parameters = {}
-    for name, param in signature.parameters.items():
-        # 获取参数类型注解
-        annotation = param.annotation
-        if annotation is inspect.Parameter.empty:
-            annotation = None
-        parameters[name] = {
-            'default': param.default,
-            'annotation': annotation
-        }
+    # 获取函数文档字符串
+    doc = func.__doc__
     
-    # 获取返回值类型注解
-    return_annotation = signature.return_annotation
-    if return_annotation is inspect.Signature.empty:
-        return_annotation = None
-    
-    # 获取函数名称
-    function_name = func.__name__
-    
-    # 构建最终结果
-    result = {
-        'function_name': function_name,
-        'parameters': parameters,
-        'return_type': return_annotation
+    # 生成参数描述
+    parameters = {
+        "type": "object",
+        "properties": {},
+        "required": [],
     }
     
-    return result
+    for param_name, param in sig.parameters.items():
+        if param_name in kwargs:
+            description = kwargs[param_name]
+            param_type = param.annotation
+            
+            # 根据参数类型生成描述
+            if param_type == int:
+                param_type_str = "int"
+            elif param_type == str:
+                param_type_str = "string"
+            elif param_type == float:
+                param_type_str = "float"
+            elif param_type == bool:
+                param_type_str = "bool"
+            elif param_type == list:
+                param_type_str = "list"
+            elif param_type == dict:
+                param_type_str = "dict"
+            else:
+                param_type_str = "any"
+            
+            parameters["properties"][param_name] = {
+                "type": param_type_str,
+                "description": description,
+            }
+            if param.default == inspect.Parameter.empty:
+                parameters["required"].append(param_name)
+    
+    # 生成函数描述
+    function_description = {
+        "type": "function",
+        "function": {
+            "name": func.__name__,
+            "description": doc.strip(),
+            "parameters": parameters,
+        },
+    }
+    
+    
+    return function_description
