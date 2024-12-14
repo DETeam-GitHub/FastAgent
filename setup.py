@@ -3,11 +3,11 @@ from setuptools import setup, find_packages
 filepath = 'README.md'
 
 setup(
-    name='fast_agent',
+    name='py_fast_agent',
     version='0.1.0',
     author='DETeam',
     author_email='ldx@destudio.asia',
-    description='快速构建智能体——基于 OpenAI-API',
+    description='快速构建智能体——兼容 OpenAI-API',
     long_description=open(filepath, encoding='utf-8').read(),
     long_description_content_type='text/markdown',
     packages=find_packages(),

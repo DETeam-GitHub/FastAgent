@@ -2,6 +2,7 @@ from zhipuai import ZhipuAI
 import json
 from .introspection import decorator
 import uuid
+# from rich import print
 
 
 def object_to_dict(obj):
@@ -26,6 +27,7 @@ class FastAgent:
         self.oai_client = ZhipuAI(api_key=api_key)
         self.tools = {}
         self.tool_prompt = []
+        self.nt:set = set()
 
     def chat(self, messages: list, user: str, model="glm-4-flash", **kwargs):
         """
@@ -43,43 +45,47 @@ class FastAgent:
         """
         # 从messages参数中复制聊天历史，避免直接修改原始数据
         msg = messages.copy()
-        # 将用户的新消息添加到聊天历史中
-        if messages != "":
-            msg.append({"role": "user", "content": user})
-        # 使用OpenAI客户端创建聊天完成请求
-        completion = self.oai_client.chat.completions.create(
-            model=model, messages=msg, tools=self.tool_prompt
-        )
+        notool=False
+        while True:
+            # 将用户的新消息添加到聊天历史中
+            if messages != "":
+                msg.append({"role": "user", "content": user})
+            # 使用OpenAI客户端创建聊天完成请求
+            if notool:
+                completion = self.oai_client.chat.completions.create(
+                    model=model, messages=msg
+                )
+            else:
+                completion = self.oai_client.chat.completions.create(
+                    model=model, messages=msg, tools=self.tool_prompt
+                )
 
-        if completion.choices[0].finish_reason == "stop":
-            # 将模型的回复添加到聊天历史中
-            msg.append(
-                {"role": "assistant", "content": completion.choices[0].message.content}
-            )
-            # 返回更新后的聊天历史和对话完成对象
-            return msg, completion
-        elif completion.choices[0].finish_reason == "tool_calls":
+            if completion.choices[0].finish_reason == "stop":
+                # 将模型的回复添加到聊天历史中
+                msg.append(
+                    {"role": "assistant", "content": completion.choices[0].message.content}
+                )
+                # 返回更新后的聊天历史和对话完成对象
+                return msg, completion
+            elif completion.choices[0].finish_reason == "tool_calls":
 
-            # 将模型的回复添加到聊天历史中
-            # msg.append({"role": "assistant", "tool_calls": object_to_dict(completion.choices[0].message.tool_calls[0])})
-            # print(msg[-1])
-            funcall = completion.choices[0].message.tool_calls[0].function
+                # 将模型的回复添加到聊天历史中
+                # xm = dict(completion.choices[0].message.tool_calls[0])
+                # xm["function"] = dict(xm["function"])
+                # print(xm)
+                # msg.append({"role": "assistant", "tool_calls": xm})
+                # print(msg[-1])
+                funcall = completion.choices[0].message.tool_calls[0].function
 
-            fkw = json.loads(funcall.arguments)
-            x = self.tools[funcall.name](**fkw)
-            # print(x)
-            msg.append({"role": "tool", "content": x})
-            # print(msg)
-            tco = self.oai_client.chat.completions.create(
-            model=model, messages=msg
-        )
-            msg.append(
-                {"role": "assistant", "content": tco.choices[0].message.content}
-            )
-            # 返回更新后的聊天历史和对话完成对象
-            return msg, tco
+                fkw = json.loads(funcall.arguments)
+                x = self.tools[funcall.name](**fkw)
+                # print(x)
+                msg.append({"role": "tool", "content": x})
+                if funcall.name in self.nt:
+                    notool = True
 
-    def tool(self, **kwargs):
+
+    def tool(self,nt:bool = False, **kwargs):
         """
         定义了一个名为tool的函数，该函数是当前类的方法。
 
@@ -92,7 +98,12 @@ class FastAgent:
         """
 
         # TODO: 在这里实现具体的功能逻辑
+        
+
+            
         def at(func):
+            if nt:
+                self.nt.add(func.__name__)
             x = decorator(func, kwargs)
             self.tools[func.__name__] = func
             self.tool_prompt.append(x)
