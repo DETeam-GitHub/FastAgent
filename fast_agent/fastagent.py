@@ -1,7 +1,6 @@
 from zhipuai import ZhipuAI
 import json
-from .introspection import decorator
-import uuid
+from .functodict import decorator
 # from rich import print
 
 
@@ -20,8 +19,8 @@ class FastAgent:
         初始化FastAgent类
 
         参数:
-        - api_key: str, OpenAI API密钥，用于认证
-        - base_url: str, API基础URL，默认为阿里云通义系列模型的API地址
+        - api_key: str, API密钥，用于认证
+        - base_url: str, API基础URL，默认为智谱的API地址
         """
         # 使用提供的API密钥和基础URL初始化OpenAI客户端
         self.oai_client = ZhipuAI(api_key=api_key)

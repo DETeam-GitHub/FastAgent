@@ -4,14 +4,14 @@ filepath = 'README.md'
 
 setup(
     name='py_fast_agent',
-    version='0.1.0',
+    version='0.2.0',
     author='DETeam',
     author_email='ldx@destudio.asia',
-    description='快速构建智能体——兼容 OpenAI-API',
+    description='快速构建智能体 —— 兼容 OpenAI-API',
     long_description=open(filepath, encoding='utf-8').read(),
     long_description_content_type='text/markdown',
     packages=find_packages(),
-    install_requires=["openai"],
+    install_requires=["zhipuai"],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
